@@ -1,0 +1,60 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Panel de Control de Créditos</h1>
+      <p>Visualización en tiempo real de solicitudes y estados.</p>
+    </div>
+    <div class="header-actions">
+      <input type="file" #fileInput (change)="onFileSelected($event)" accept=".pdf" style="display: none">
+      <button class="btn-primary" (click)="fileInput.click()">Cargar Solicitud (PDF)</button>
+    </div>
+  </header>
+
+  <section class="stats-overview">
+    <div class="stat-card">
+      <h3>Total Solicitudes</h3>
+      <p class="stat-value">{{ creditos.length }}</p>
+    </div>
+    <div class="stat-card">
+      <h3>En Análisis</h3>
+      <p class="stat-value">{{ creditos.filter(c => c.estado === 'PENDIENTE_ANALISIS').length }}</p>
+    </div>
+    <div class="stat-card approved">
+      <h3>Aprobados</h3>
+      <p class="stat-value">{{ creditos.filter(c => c.estado === 'APROBADO').length }}</p>
+    </div>
+    <div class="stat-card disbursed">
+      <h3>Desembolsados</h3>
+      <p class="stat-value">{{ creditos.filter(c => c.estado === 'DESEMBOLSADO').length }}</p>
+    </div>
+  </section>
+
+  <section class="credit-table-container">
+    <table class="credit-table">
+      <thead>
+        <tr>
+          <th>Identificación</th>
+          <th>Nombre Asociado</th>
+          <th>Monto</th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let credito of creditos">
+          <td>{{ credito.identificacion }}</td>
+          <td>{{ credito.nombre }}</td>
+          <td>{{ credito.monto | currency }}</td>
+          <td>{{ credito.tipo }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(credito.estado)">
+              {{ credito.estado }}
+            </span>
+          </td>
+          <td>{{ credito.created_at | date:'short' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>

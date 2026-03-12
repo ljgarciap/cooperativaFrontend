@@ -1,0 +1,83 @@
+<div class="reconciliation-container">
+  <div *ngIf="!selectedConciliacion">
+    <header class="view-header">
+      <div class="header-content">
+        <h1>Conciliaciones Bancarias</h1>
+        <p>Gestión de cierres mensuales y partidas pendientes.</p>
+      </div>
+      <div class="header-actions">
+        <input type="file" #excelInput (change)="onExcelSelected($event)" accept=".xlsx,.xls" style="display: none">
+        <button class="btn-primary" (click)="excelInput.click()">Nueva Conciliación (Excel)</button>
+      </div>
+    </header>
+
+    <div class="conciliacion-list">
+      <div *ngFor="let c of conciliaciones" class="conciliacion-card" (click)="selectConciliacion(c.id)">
+        <div class="card-title">
+          <h3>{{ c.banco }}</h3>
+          <span class="period">{{ c.mes }} {{ c.anio }}</span>
+        </div>
+        <div class="card-stats">
+          <div><span>Banco:</span> {{ c.saldo_banco | currency }}</div>
+          <div><span>Contable:</span> {{ c.saldo_contable | currency }}</div>
+        </div>
+        <div class="card-footer">
+          <span class="status-badge" [ngClass]="'status-' + c.estado.toLowerCase()">{{ c.estado }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="selectedConciliacion" class="detail-view">
+    <header class="detail-header">
+      <button class="btn-back" (click)="closeDetail()">← Volver</button>
+      <h2>{{ selectedConciliacion.banco }} - {{ selectedConciliacion.mes }} {{ selectedConciliacion.anio }}</h2>
+    </header>
+
+    <div class="tables-comparison">
+      <div class="comparison-side">
+        <h3>Extracto Bancario</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Descripción</th>
+              <th>Valor</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedConciliacion.extracto_items" [ngClass]="{'row-conciliated': item.conciliado}">
+              <td>{{ item.fecha | date:'shortDate' }}</td>
+              <td>{{ item.descripcion }}</td>
+              <td>{{ item.valor | currency }}</td>
+              <td>{{ item.conciliado ? '✅' : '❌' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="comparison-side">
+        <h3>Auxiliar Contable</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Identificación</th>
+              <th>Valor</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedConciliacion.auxiliar_items" [ngClass]="{'row-conciliated': item.conciliado}">
+              <td>{{ item.fecha | date:'shortDate' }}</td>
+              <td>{{ item.identificacion }}</td>
+              <td>{{ item.valor | currency }}</td>
+              <td>{{ item.conciliado ? '✅' : '❌' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
