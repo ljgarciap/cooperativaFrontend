@@ -64,6 +64,26 @@
   box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
 }
 
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 1.5rem 0.5rem;
+}
+
+.nav-item-danger {
+  color: #fca5a5;
+}
+
+.nav-item-danger:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.nav-icon {
+  margin-right: 12px;
+  font-size: 1.1rem;
+}
+
 .main-content {
   flex: 1;
   background-color: #f8fafc;

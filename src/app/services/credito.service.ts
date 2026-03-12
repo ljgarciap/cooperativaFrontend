@@ -7,6 +7,8 @@ export interface Credito {
   id: number;
   identificacion: string;
   nombre: string;
+  celular?: string;
+  correo?: string;
   monto: number;
   tipo: string;
   estado: string;
@@ -42,6 +44,27 @@ export class CreditoService {
 
   deleteCredito(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  approveCredit(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/approve`, {});
+  }
+
+  rejectCredit(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/reject`, {});
+  }
+
+  downloadPdf(id: number): void {
+    window.open(`${this.apiUrl}/${id}/download-pdf`, '_blank');
+  }
+
+  // Reuse extraction proxy for consistency validation
+  validateConsistency(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('data', file);
+    formData.append('nombre_archivo', file.name);
+    // We send it to extraction but we don't save it if we handle it correctly in backend
+    return this.http.post(this.proxyUrl, formData);
   }
 
   getFileUrl(url: string | undefined): string | null {

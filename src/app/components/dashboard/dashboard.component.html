@@ -1,13 +1,16 @@
 <div class="dashboard-container">
-  <header class="dashboard-header">
+  <header class="view-header">
     <div class="header-content">
       <h1>Panel de Control de Créditos</h1>
       <p>Gestión inteligente y visualización en tiempo real.</p>
     </div>
     <div class="header-actions">
       <input type="file" #fileInput (change)="onFileSelected($event)" accept=".pdf" style="display: none">
+      <!-- Hidden input for consistency validation -->
+      <input type="file" id="consistencyInput" (change)="onConsistencyFileSelected($event)" accept=".pdf" style="display: none">
+      
       <button class="btn-primary" [disabled]="isUploading" (click)="fileInput.click()">
-        <span *ngIf="!isUploading">🚀 Cargar Solicitud (PDF)</span>
+        <span *ngIf="!isUploading">Cargar Solicitud (PDF)</span>
         <span *ngIf="isUploading">⏳ Procesando...</span>
       </button>
     </div>
@@ -59,14 +62,35 @@
               </span>
             </td>
             <td class="table-actions">
-              <button class="btn-icon" title="Ver Archivo" (click)="viewFile(credito.url_archivo)">
-                👁️
+              <button class="btn-action-view" title="Ver Archivo" (click)="viewFile(credito.url_archivo)">
+                Ver
               </button>
-              <button class="btn-icon" title="Editar" (click)="openEditModal(credito)">
-                ✏️
+              
+              <!-- Quick Decision for pending items -->
+              <ng-container *ngIf="credito.estado === 'PENDIENTE_ANALISIS'">
+                <button class="btn-action-approve" title="Aprobar" (click)="approveCredit(credito.id)">
+                  Aprobar
+                </button>
+                <button class="btn-action-reject" title="Rechazar" (click)="rejectCredit(credito.id)">
+                  Rechazar
+                </button>
+              </ng-container>
+
+              <!-- Download for approved -->
+              <button *ngIf="credito.estado === 'APROBADO'" class="btn-action-download" (click)="downloadPdf(credito.id)">
+                PDF
               </button>
-              <button class="btn-icon delete" title="Eliminar" (click)="deleteCredito(credito.id)">
-                🗑️
+
+              <button class="btn-action-edit" title="Gestionar" (click)="openEditModal(credito)">
+                Gestionar
+              </button>
+
+              <button class="btn-action-validate" title="Validar Consistencia" (click)="startConsistencyCheck(credito)">
+                Validar
+              </button>
+
+              <button class="btn-action-delete" title="Eliminar" (click)="deleteCredito(credito.id)">
+                Eliminar
               </button>
             </td>
           </tr>
@@ -100,6 +124,14 @@
             <input type="text" [(ngModel)]="editingCredito.identificacion">
           </div>
           <div class="form-group">
+            <label>Celular</label>
+            <input type="text" [(ngModel)]="editingCredito.celular">
+          </div>
+          <div class="form-group">
+            <label>Correo Electrónico</label>
+            <input type="email" [(ngModel)]="editingCredito.correo">
+          </div>
+          <div class="form-group">
             <label>Monto Solicitado</label>
             <input type="number" [(ngModel)]="editingCredito.monto">
           </div>
@@ -110,10 +142,10 @@
           <div class="form-group full-width">
             <label>Estado del Trámite</label>
             <select [(ngModel)]="editingCredito.estado">
-              <option value="PENDIENTE_ANALISIS">⏳ Pendiente Análisis</option>
-              <option value="APROBADO">✅ Aprobado</option>
-              <option value="RECHAZADO">❌ Rechazado</option>
-              <option value="DESEMBOLSADO">💸 Desembolsado</option>
+              <option value="PENDIENTE_ANALISIS">Pendiente Análisis</option>
+              <option value="APROBADO">Aprobado</option>
+              <option value="RECHAZADO">Rechazado</option>
+              <option value="DESEMBOLSADO">Desembolsado</option>
             </select>
           </div>
           <div class="form-group full-width">

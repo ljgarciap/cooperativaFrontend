@@ -1,13 +1,18 @@
 <div class="app-layout">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h2>SISTEMA COOP</h2>
+      <h2>SISTEMA TESTING</h2>
       <p class="brand-subtitle">Gestión Inteligente</p>
     </div>
     <nav class="sidebar-nav">
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">Dashboard Créditos</a>
       <a routerLink="/reconciliation" routerLinkActive="active" class="nav-item">Conciliaciones</a>
       <a routerLink="/bitacora" routerLinkActive="active" class="nav-item">Bitácora de Cargas</a>
+      <div class="sidebar-divider"></div>
+      <a href="javascript:void(0)" (click)="resetSystem()" class="nav-item nav-item-danger">
+        <span class="nav-icon">🗑️</span>
+        Limpiar Datos
+      </a>
     </nav>
   </aside>
   <main class="main-content">
