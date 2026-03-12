@@ -61,7 +61,13 @@
         </div>
       </div>
       <div class="header-right">
-        <button *ngIf="selectedConciliacion.estado === 'PROCESANDO' || selectedConciliacion.estado === 'CON_DISCREPANCIAS'" 
+        <div class="filter-controls">
+          <label class="switch-container">
+            <input type="checkbox" [(ngModel)]="showOnlyPending">
+            <span class="switch-label">Ver solo discrepancias</span>
+          </label>
+        </div>
+        <button *ngIf="selectedConciliacion.estado === 'PROCESANDO' || selectedConciliacion.estado === 'CON_DISCREPANCIAS' || selectedConciliacion.estado === 'CARGADO'" 
                 class="btn-primary" (click)="onReconcile()">
           Ejecutar Conciliación
         </button>
@@ -70,6 +76,27 @@
         </span>
       </div>
     </header>
+
+    <!-- Discrepancy Summary Box -->
+    <div class="discrepancy-summary fade-in" *ngIf="selectedConciliacion.estado === 'CON_DISCREPANCIAS'">
+      <div class="summary-card warning">
+        <div class="summary-icon">⚠️</div>
+        <div class="summary-text">
+          <h3>Partidas Pendientes de Conciliar</h3>
+          <p>Existen movimientos que no coinciden en fecha y valor exacto.</p>
+        </div>
+        <div class="summary-values">
+          <div class="val-group">
+            <span class="l">Extracto:</span>
+            <span class="v red">{{ totalExtractoPendiente | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+          <div class="val-group">
+            <span class="l">Auxiliar:</span>
+            <span class="v red">{{ totalAuxiliarPendiente | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="comparison-layout">
       <!-- Extracto Side -->
@@ -89,13 +116,13 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of selectedConciliacion.extracto_items">
+              <tr *ngFor="let item of filteredExtracto" [class.row-pending]="!isConciliado(item)">
                 <td>{{ item.fecha | date:'dd/MM/yy' }}</td>
                 <td class="text-small">{{ item.descripcion }}</td>
                 <td class="font-bold">{{ item.valor | currency:'USD':'symbol':'1.0-0' }}</td>
                 <td>
-                  <span class="mini-tag" [class.tag-done]="item.conciliado">
-                    {{ item.conciliado ? 'Conciliado' : 'Pendiente' }}
+                  <span class="mini-tag" [class.tag-done]="isConciliado(item)">
+                    {{ isConciliado(item) ? 'Conciliado' : 'Pendiente' }}
                   </span>
                 </td>
               </tr>
@@ -108,7 +135,7 @@
       <div class="table-card">
         <div class="table-header">
           <h3>Auxiliar Contable</h3>
-          <span class="count-badge">{{ selectedConciliacion.auxiliar_items?.length || 0 }} registros</span>
+          <span class="count-badge">{{ filteredAuxiliar.length }} registros</span>
         </div>
         <div class="table-scroll">
           <table class="premium-table">
@@ -121,13 +148,13 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of selectedConciliacion.auxiliar_items">
+              <tr *ngFor="let item of filteredAuxiliar" [class.row-pending]="!isConciliado(item)">
                 <td>{{ item.fecha | date:'dd/MM/yy' }}</td>
                 <td class="text-small">{{ item.referencia || item.identificacion }}</td>
                 <td class="font-bold">{{ item.valor | currency:'USD':'symbol':'1.0-0' }}</td>
                 <td>
-                  <span class="mini-tag" [class.tag-done]="item.conciliado">
-                    {{ item.conciliado ? 'Conciliado' : 'Pendiente' }}
+                  <span class="mini-tag" [class.tag-done]="isConciliado(item)">
+                    {{ isConciliado(item) ? 'Conciliado' : 'Pendiente' }}
                   </span>
                 </td>
               </tr>

@@ -31,10 +31,13 @@ export class CreditoService {
     return this.http.get<Credito[]>(this.apiUrl);
   }
 
-  uploadPdf(file: File): Observable<any> {
+  uploadPdf(file: File, skipSave: boolean = false): Observable<any> {
     const formData = new FormData();
     formData.append('data', file);
     formData.append('nombre_archivo', file.name);
+    if (skipSave) {
+      formData.append('skip_save', 'true');
+    }
     return this.http.post(this.proxyUrl, formData);
   }
 
@@ -60,11 +63,7 @@ export class CreditoService {
 
   // Reuse extraction proxy for consistency validation
   validateConsistency(file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('data', file);
-    formData.append('nombre_archivo', file.name);
-    // We send it to extraction but we don't save it if we handle it correctly in backend
-    return this.http.post(this.proxyUrl, formData);
+    return this.uploadPdf(file, true);
   }
 
   getFileUrl(url: string | undefined): string | null {

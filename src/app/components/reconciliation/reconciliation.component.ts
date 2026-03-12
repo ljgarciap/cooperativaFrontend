@@ -15,6 +15,39 @@ export class ReconciliationComponent implements OnInit {
   conciliaciones: Conciliacion[] = [];
   selectedConciliacion: Conciliacion | null = null;
   isUploading = false;
+  showOnlyPending = false;
+  
+  // Stats helpers
+  get totalExtractoPendiente(): number {
+    return this.selectedConciliacion?.extracto_items
+      ?.filter(i => !this.isConciliado(i))
+      .reduce((acc, curr) => acc + curr.valor, 0) || 0;
+  }
+
+  get totalAuxiliarPendiente(): number {
+    return this.selectedConciliacion?.auxiliar_items
+      ?.filter(i => !this.isConciliado(i))
+      .reduce((acc, curr) => acc + curr.valor, 0) || 0;
+  }
+
+  get filteredExtracto() {
+    if (!this.selectedConciliacion?.extracto_items) return [];
+    return this.showOnlyPending 
+      ? this.selectedConciliacion.extracto_items.filter(i => !this.isConciliado(i))
+      : this.selectedConciliacion.extracto_items;
+  }
+
+  get filteredAuxiliar() {
+    if (!this.selectedConciliacion?.auxiliar_items) return [];
+    return this.showOnlyPending 
+      ? this.selectedConciliacion.auxiliar_items.filter(i => !this.isConciliado(i))
+      : this.selectedConciliacion.auxiliar_items;
+  }
+
+  public isConciliado(item: any): boolean {
+    if (item.conciliado === true || item.conciliado === 1 || item.conciliado === '1') return true;
+    return false;
+  }
   
   // Upload Params
   uploadParams = {
