@@ -1,17 +1,47 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Conciliacion {
   id: number;
   banco: string;
   mes: string;
-  anio: string;
+  anio: number;
   saldo_banco: number;
   saldo_contable: number;
   estado: string;
-  extracto_items?: any[];
-  auxiliar_items?: any[];
+  created_at: string;
+  extracto_items?: ExtractoItem[];
+  auxiliar_items?: AuxiliarItem[];
+}
+
+export interface ExtractoItem {
+  id: number;
+  fecha: string;
+  descripcion: string;
+  referencia: string;
+  valor: number;
+  conciliado: boolean;
+}
+
+export interface AuxiliarItem {
+  id: number;
+  fecha: string;
+  identificacion: string;
+  descripcion: string;
+  referencia: string;
+  valor: number;
+  conciliado: boolean;
+}
+
+export interface Bitacora {
+  id: number;
+  nombre_archivo: string;
+  tipo_archivo: string;
+  proceso: string;
+  estado: string;
+  detalles: string;
   created_at: string;
 }
 
@@ -19,7 +49,9 @@ export interface Conciliacion {
   providedIn: 'root'
 })
 export class ConciliacionService {
-  private apiUrl = 'http://localhost:8000/api/conciliaciones';
+  private apiUrl = `${environment.apiUrl}/conciliaciones`;
+  private bitacoraUrl = `${environment.apiUrl}/bitacora`;
+  private proxyUrl = `${environment.apiUrl}/proxy-n8n/excel`;
 
   constructor(private http: HttpClient) { }
 
@@ -31,10 +63,22 @@ export class ConciliacionService {
     return this.http.get<Conciliacion>(`${this.apiUrl}/${id}`);
   }
 
-  uploadExcel(file: File): Observable<any> {
+  getBitacora(): Observable<Bitacora[]> {
+    return this.http.get<Bitacora[]>(this.bitacoraUrl);
+  }
+
+  uploadExcel(file: File, params: any): Observable<any> {
     const formData = new FormData();
-    formData.append('file', file);
-    // For the demo, this would hit the n8n webhook
-    return this.http.post('http://localhost:5678/webhook-test/conciliacion-excel', formData);
+    formData.append('data', file);
+    formData.append('nombre_archivo', file.name);
+    formData.append('banco', params.banco);
+    formData.append('mes', params.mes);
+    formData.append('anio', params.anio);
+    formData.append('fuente', params.fuente);
+    return this.http.post(this.proxyUrl, formData);
+  }
+
+  runReconciliation(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/run`, {});
   }
 }

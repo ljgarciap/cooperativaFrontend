@@ -1,0 +1,89 @@
+:host {
+  --primary: #6366f1;
+  --bg-main: #f8fafc;
+}
+
+.bitacora-container {
+  padding: 2.5rem;
+  background-color: var(--bg-main);
+  min-height: 100vh;
+}
+
+.view-header {
+  margin-bottom: 2.5rem;
+}
+
+.view-header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.view-header p {
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.table-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 1.25rem;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.data-table td {
+  padding: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.data-table tr:hover td {
+  background: #f8fafc;
+}
+
+/* Badges */
+.type-badge {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-procesado { background: #ecfdf5; color: #065f46; }
+.status-procesando { background: #eff6ff; color: #1d4ed8; }
+.status-error { background: #fef2f2; color: #991b1b; }
+
+.no-data {
+  text-align: center;
+  padding: 4rem !important;
+  color: #94a3b8;
+  font-style: italic;
+}

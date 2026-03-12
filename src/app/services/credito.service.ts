@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Credito {
   id: number;
@@ -10,6 +11,7 @@ export interface Credito {
   tipo: string;
   estado: string;
   observaciones?: string;
+  url_archivo?: string;
   created_at: string;
   historial?: any[];
 }
@@ -18,7 +20,8 @@ export interface Credito {
   providedIn: 'root'
 })
 export class CreditoService {
-  private apiUrl = 'http://localhost:8000/api/creditos';
+  private apiUrl = `${environment.apiUrl}/creditos`;
+  private proxyUrl = `${environment.apiUrl}/proxy-n8n/pdf`;
 
   constructor(private http: HttpClient) { }
 
@@ -28,10 +31,22 @@ export class CreditoService {
 
   uploadPdf(file: File): Observable<any> {
     const formData = new FormData();
-    formData.append('file', file);
-    // For the demo, this would hit the n8n webhook
-    return this.http.post('http://localhost:5678/webhook-test/credito-pdf', formData);
+    formData.append('data', file);
+    formData.append('nombre_archivo', file.name);
+    return this.http.post(this.proxyUrl, formData);
   }
 
-  // Future methods for status updates can be added here
+  updateCredito(id: number, data: Partial<Credito>): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, data);
+  }
+
+  deleteCredito(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  getFileUrl(url: string | undefined): string | null {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${environment.storageUrl}${url}`;
+  }
 }

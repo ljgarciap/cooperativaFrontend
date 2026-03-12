@@ -2,11 +2,14 @@
   <header class="dashboard-header">
     <div class="header-content">
       <h1>Panel de Control de Créditos</h1>
-      <p>Visualización en tiempo real de solicitudes y estados.</p>
+      <p>Gestión inteligente y visualización en tiempo real.</p>
     </div>
     <div class="header-actions">
       <input type="file" #fileInput (change)="onFileSelected($event)" accept=".pdf" style="display: none">
-      <button class="btn-primary" (click)="fileInput.click()">Cargar Solicitud (PDF)</button>
+      <button class="btn-primary" [disabled]="isUploading" (click)="fileInput.click()">
+        <span *ngIf="!isUploading">🚀 Cargar Solicitud (PDF)</span>
+        <span *ngIf="isUploading">⏳ Procesando...</span>
+      </button>
     </div>
   </header>
 
@@ -17,44 +20,112 @@
     </div>
     <div class="stat-card">
       <h3>En Análisis</h3>
-      <p class="stat-value">{{ creditos.filter(c => c.estado === 'PENDIENTE_ANALISIS').length }}</p>
+      <p class="stat-value">{{ getCountByEstado('PENDIENTE_ANALISIS') }}</p>
     </div>
     <div class="stat-card approved">
       <h3>Aprobados</h3>
-      <p class="stat-value">{{ creditos.filter(c => c.estado === 'APROBADO').length }}</p>
+      <p class="stat-value">{{ getCountByEstado('APROBADO') }}</p>
     </div>
     <div class="stat-card disbursed">
       <h3>Desembolsados</h3>
-      <p class="stat-value">{{ creditos.filter(c => c.estado === 'DESEMBOLSADO').length }}</p>
+      <p class="stat-value">{{ getCountByEstado('DESEMBOLSADO') }}</p>
     </div>
   </section>
 
   <section class="credit-table-container">
-    <table class="credit-table">
-      <thead>
-        <tr>
-          <th>Identificación</th>
-          <th>Nombre Asociado</th>
-          <th>Monto</th>
-          <th>Tipo</th>
-          <th>Estado</th>
-          <th>Fecha</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let credito of creditos">
-          <td>{{ credito.identificacion }}</td>
-          <td>{{ credito.nombre }}</td>
-          <td>{{ credito.monto | currency }}</td>
-          <td>{{ credito.tipo }}</td>
-          <td>
-            <span class="status-badge" [ngClass]="getStatusClass(credito.estado)">
-              {{ credito.estado }}
-            </span>
-          </td>
-          <td>{{ credito.created_at | date:'short' }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="credit-table">
+        <thead>
+          <tr>
+            <th>Identificación</th>
+            <th>Asociado</th>
+            <th>Monto</th>
+            <th>Tipo / Línea</th>
+            <th>Estado Actual</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let credito of creditos" class="fade-in">
+            <td class="font-bold">{{ credito.identificacion }}</td>
+            <td class="text-upper">{{ credito.nombre }}</td>
+            <td class="text-primary font-bold">{{ credito.monto | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>
+              <span class="text-muted small uppercase">{{ credito.tipo || 'No especificado' }}</span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(credito.estado)">
+                {{ credito.estado }}
+              </span>
+            </td>
+            <td class="table-actions">
+              <button class="btn-icon" title="Ver Archivo" (click)="viewFile(credito.url_archivo)">
+                👁️
+              </button>
+              <button class="btn-icon" title="Editar" (click)="openEditModal(credito)">
+                ✏️
+              </button>
+              <button class="btn-icon delete" title="Eliminar" (click)="deleteCredito(credito.id)">
+                🗑️
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="creditos.length === 0">
+            <td colspan="6" class="empty-state">
+              <div class="empty-content">
+                <p>No hay créditos registrados todavía.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
+
+  <!-- Edit Modal (Enhanced) -->
+  <div class="modal-overlay" *ngIf="isEditing" (click)="closeEditModal()">
+    <div class="modal-content scale-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Gestión de Solicitud</h2>
+        <button class="btn-close" (click)="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre del Asociado</label>
+            <input type="text" [(ngModel)]="editingCredito.nombre">
+          </div>
+          <div class="form-group">
+            <label>Número de Identificación</label>
+            <input type="text" [(ngModel)]="editingCredito.identificacion">
+          </div>
+          <div class="form-group">
+            <label>Monto Solicitado</label>
+            <input type="number" [(ngModel)]="editingCredito.monto">
+          </div>
+          <div class="form-group">
+            <label>Línea de Crédito</label>
+            <input type="text" [(ngModel)]="editingCredito.tipo">
+          </div>
+          <div class="form-group full-width">
+            <label>Estado del Trámite</label>
+            <select [(ngModel)]="editingCredito.estado">
+              <option value="PENDIENTE_ANALISIS">⏳ Pendiente Análisis</option>
+              <option value="APROBADO">✅ Aprobado</option>
+              <option value="RECHAZADO">❌ Rechazado</option>
+              <option value="DESEMBOLSADO">💸 Desembolsado</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label>Observaciones Adicionales</label>
+            <textarea rows="3" [(ngModel)]="editingCredito.observaciones"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeEditModal()">Cancelar</button>
+        <button class="btn-primary" (click)="saveEdit()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
 </div>

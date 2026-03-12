@@ -1,82 +1,189 @@
-<div class="reconciliation-container">
+<div class="reconciliation-container fade-in">
   <div *ngIf="!selectedConciliacion">
     <header class="view-header">
       <div class="header-content">
         <h1>Conciliaciones Bancarias</h1>
-        <p>Gestión de cierres mensuales y partidas pendientes.</p>
+        <p>Control de extractos, auxiliares y detección de partidas pendientes.</p>
       </div>
       <div class="header-actions">
-        <input type="file" #excelInput (change)="onExcelSelected($event)" accept=".xlsx,.xls" style="display: none">
-        <button class="btn-primary" (click)="excelInput.click()">Nueva Conciliación (Excel)</button>
+        <button class="btn-primary" (click)="openUploadModal()">
+          <span class="btn-icon-plus">+</span>
+          Nueva Carga de Datos
+        </button>
       </div>
     </header>
 
-    <div class="conciliacion-list">
-      <div *ngFor="let c of conciliaciones" class="conciliacion-card" (click)="selectConciliacion(c.id)">
-        <div class="card-title">
-          <h3>{{ c.banco }}</h3>
-          <span class="period">{{ c.mes }} {{ c.anio }}</span>
+    <div class="conciliacion-grid">
+      <div *ngFor="let c of conciliaciones; trackBy: trackById" class="conciliacion-card scale-in" (click)="selectConciliacion(c.id)">
+        <div class="card-header">
+          <div class="bank-info">
+            <h3>{{ c.banco }}</h3>
+            <span class="period-badge">{{ c.mes }} {{ c.anio }}</span>
+          </div>
+          <span class="status-badge" [ngClass]="getStatusClass(c.estado)">
+            {{ c.estado }}
+          </span>
         </div>
-        <div class="card-stats">
-          <div><span>Banco:</span> {{ c.saldo_banco | currency }}</div>
-          <div><span>Contable:</span> {{ c.saldo_contable | currency }}</div>
+        <div class="card-body">
+          <div class="stat-row">
+            <span class="label">Saldo Banco</span>
+            <span class="val">{{ c.saldo_banco | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="label">Saldo Contable</span>
+            <span class="val">{{ c.saldo_contable | currency:'USD':'symbol':'1.0-0' }}</span>
+          </div>
         </div>
         <div class="card-footer">
-          <span class="status-badge" [ngClass]="'status-' + c.estado.toLowerCase()">{{ c.estado }}</span>
+          <button class="btn-text">Ver detalle del cierre</button>
+        </div>
+      </div>
+
+      <!-- Professional Empty State -->
+      <div *ngIf="conciliaciones.length === 0" class="empty-state">
+        <div class="empty-icon-outline"></div>
+        <h3>No hay conciliaciones</h3>
+        <p>Comienza cargando un archivo Excel de extracto o auxiliar contable.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View -->
+  <div *ngIf="selectedConciliacion" class="detail-view fade-in">
+    <header class="detail-header">
+      <div class="header-left">
+        <button class="btn-icon-back" (click)="closeDetail()">
+          <span class="back-arrow"></span>
+        </button>
+        <div class="detail-titles">
+          <h2>{{ selectedConciliacion.banco }}</h2>
+          <p>Periodo de conciliación: {{ selectedConciliacion.mes }} {{ selectedConciliacion.anio }}</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button *ngIf="selectedConciliacion.estado === 'PROCESANDO' || selectedConciliacion.estado === 'CON_DISCREPANCIAS'" 
+                class="btn-primary" (click)="onReconcile()">
+          Ejecutar Conciliación
+        </button>
+        <span class="status-badge" [ngClass]="getStatusClass(selectedConciliacion.estado)">
+          {{ selectedConciliacion.estado }}
+        </span>
+      </div>
+    </header>
+
+    <div class="comparison-layout">
+      <!-- Extracto Side -->
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Extracto Bancario</h3>
+          <span class="count-badge">{{ selectedConciliacion.extracto_items?.length || 0 }} registros</span>
+        </div>
+        <div class="table-scroll">
+          <table class="premium-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th>Monto</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of selectedConciliacion.extracto_items">
+                <td>{{ item.fecha | date:'dd/MM/yy' }}</td>
+                <td class="text-small">{{ item.descripcion }}</td>
+                <td class="font-bold">{{ item.valor | currency:'USD':'symbol':'1.0-0' }}</td>
+                <td>
+                  <span class="mini-tag" [class.tag-done]="item.conciliado">
+                    {{ item.conciliado ? 'Conciliado' : 'Pendiente' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Auxiliar Side -->
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Auxiliar Contable</h3>
+          <span class="count-badge">{{ selectedConciliacion.auxiliar_items?.length || 0 }} registros</span>
+        </div>
+        <div class="table-scroll">
+          <table class="premium-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Ref / ID</th>
+                <th>Monto</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of selectedConciliacion.auxiliar_items">
+                <td>{{ item.fecha | date:'dd/MM/yy' }}</td>
+                <td class="text-small">{{ item.referencia || item.identificacion }}</td>
+                <td class="font-bold">{{ item.valor | currency:'USD':'symbol':'1.0-0' }}</td>
+                <td>
+                  <span class="mini-tag" [class.tag-done]="item.conciliado">
+                    {{ item.conciliado ? 'Conciliado' : 'Pendiente' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
 
-  <div *ngIf="selectedConciliacion" class="detail-view">
-    <header class="detail-header">
-      <button class="btn-back" (click)="closeDetail()">← Volver</button>
-      <h2>{{ selectedConciliacion.banco }} - {{ selectedConciliacion.mes }} {{ selectedConciliacion.anio }}</h2>
-    </header>
-
-    <div class="tables-comparison">
-      <div class="comparison-side">
-        <h3>Extracto Bancario</h3>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Descripción</th>
-              <th>Valor</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of selectedConciliacion.extracto_items" [ngClass]="{'row-conciliated': item.conciliado}">
-              <td>{{ item.fecha | date:'shortDate' }}</td>
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.valor | currency }}</td>
-              <td>{{ item.conciliado ? '✅' : '❌' }}</td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- Upload Modal -->
+  <div class="modal-overlay" *ngIf="showUploadModal" (click)="closeUploadModal()">
+    <div class="modal-content scale-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Carga de Datos Bancarios</h2>
+        <button class="btn-close" (click)="closeUploadModal()">&times;</button>
       </div>
-
-      <div class="comparison-side">
-        <h3>Auxiliar Contable</h3>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Identificación</th>
-              <th>Valor</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of selectedConciliacion.auxiliar_items" [ngClass]="{'row-conciliated': item.conciliado}">
-              <td>{{ item.fecha | date:'shortDate' }}</td>
-              <td>{{ item.identificacion }}</td>
-              <td>{{ item.valor | currency }}</td>
-              <td>{{ item.conciliado ? '✅' : '❌' }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Banco</label>
+            <select [(ngModel)]="uploadParams.banco">
+              <option value="BANCOLOMBIA">Bancolombia</option>
+              <option value="BANCO_BOGOTA">Banco de Bogotá</option>
+              <option value="DAVIVIENDA">Davivienda</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Año</label>
+            <input type="number" [(ngModel)]="uploadParams.anio">
+          </div>
+          <div class="form-group">
+            <label>Mes</label>
+            <select [(ngModel)]="uploadParams.mes">
+              <option value="Enero">Enero</option>
+              <option value="Febrero">Febrero</option>
+              <option value="Marzo">Marzo</option>
+              <option value="Abril">Abril</option>
+              <option value="Mayo">Mayo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tipo de Documento</label>
+            <select [(ngModel)]="uploadParams.fuente">
+              <option value="EXTRACTO">Extracto Bancario</option>
+              <option value="AUXILIAR">Auxiliar Contable</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="upload-zone" (click)="fileInput.click()">
+          <div class="upload-icon-style"></div>
+          <p>Seleccionar archivo Excel (.xlsx)</p>
+          <span class="support-text">O arrastra y suelta el archivo aquí</span>
+          <input type="file" #fileInput (change)="onFileSelected($event)" accept=".xlsx,.xls" style="display: none">
+        </div>
       </div>
     </div>
   </div>

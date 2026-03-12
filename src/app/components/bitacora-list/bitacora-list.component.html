@@ -1,0 +1,34 @@
+<div class="bitacora-container">
+  <header class="view-header">
+    <h1>Bitácora de Cargas</h1>
+    <p>Historial detallado de archivos procesados por el sistema.</p>
+  </header>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Fecha/Hora</th>
+          <th>Archivo</th>
+          <th>Tipo</th>
+          <th>Proceso</th>
+          <th>Estado</th>
+          <th>Detalles</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of logs">
+          <td>{{ log.created_at | date:'medium' }}</td>
+          <td><strong>{{ log.nombre_archivo }}</strong></td>
+          <td><span class="type-badge">{{ log.tipo_archivo }}</span></td>
+          <td>{{ log.proceso }}</td>
+          <td><span class="status-badge" [ngClass]="'status-' + log.estado.toLowerCase()">{{ log.estado }}</span></td>
+          <td>{{ log.detalles }}</td>
+        </tr>
+        <tr *ngIf="logs.length === 0">
+          <td colspan="6" class="no-data">No hay registros de carga aún.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
